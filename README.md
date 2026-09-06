@@ -15,7 +15,7 @@ memory than the snnTorch/Norse equivalents on identical hardware (see
 ## Install
 
 `crematorium` uses `torch>=2.13.0`, selected via an extra matching your
-backend:
+backend(example, currently the library is **NOT RELEASED** on PiPy):
 
 ```bash
 pip install crematorium[cu130]   # NVIDIA / CUDA 13.0
