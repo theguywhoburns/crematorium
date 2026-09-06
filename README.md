@@ -1,6 +1,6 @@
 # crematorium
 
-[![CI](https://github.com/theguywhoburns/blowtorch/actions/workflows/test.yml/badge.svg)](https://github.com/theguywhoburns/blowtorch/actions/workflows/test.yml)
+[![CI](https://github.com/theguywhoburns/crematorium/actions/workflows/test.yml/badge.svg)](https://github.com/theguywhoburns/crematorium/actions/workflows/test.yml)
 
 A declarative spiking neural network library for PyTorch research. Neurons
 are described by plain nested classes (`Params`, `Specs`) and a single
@@ -222,22 +222,22 @@ toggle). Tables below are LIF, T=1000, B=32, F=1024:
 - Sequence mode uses ~30% less memory than the snnTorch/Norse equivalents
   here (254 vs ~378 MiB) — relevant on 4-8GB laptop GPUs.
 
-| library         | mode          | compiled | ms      | steps/s  | peak MiB | vs crematorium seq eager |
+| library         | mode          | compiled | ms      | steps/s | peak MiB | vs crematorium seq eager |
 | --------------- | ------------- | -------- | ------- | ------- | -------- | ------------------------ |
-| crematorium LIF | seq hidden    | eager    | 39.918  | 25,051   | 254.6    | 1.00x                    |
-| crematorium LIF | seq hidden    | compile  | 3.451   | 289,810  | 252.5    | 0.09x                    |
-| crematorium LIF | seq explicit  | eager    | 41.180  | 24,284   | 254.8    | 1.03x                    |
-| crematorium LIF | seq explicit  | compile  | 3.420   | 292,401  | 252.4    | 0.09x                    |
-| crematorium LIF | step hidden   | eager    | 45.254  | 22,098   | 126.8    | 1.13x                    |
-| crematorium LIF | step hidden   | compile  | 38.433  | 26,020   | 126.5    | 0.96x                    |
-| crematorium LIF | step explicit | eager    | 41.608  | 24,034   | 127.0    | 1.04x                    |
-| crematorium LIF | step explicit | compile  | 36.418  | 27,459   | 126.8    | 0.91x                    |
-| snntorch        | seq           | eager    | 101.685 | 9,834    | 377.5    | 2.55x                    |
-| snntorch        | seq           | compile  | 39.432  | 25,360   | 378.0    | 0.99x                    |
-| norse           | seq           | eager    | 100.005 | 9,999    | 378.3    | 2.51x                    |
-| norse           | seq           | compile  | 4.332   | 230,829  | 376.6    | 0.11x                    |
-| norse           | step          | eager    | 99.913  | 10,009   | 128.0    | 2.50x                    |
-| norse           | step          | compile  | 37.215  | 26,871   | 127.3    | 0.93x                    |
+| crematorium LIF | seq hidden    | eager    | 39.918  | 25,051  | 254.6    | 1.00x                    |
+| crematorium LIF | seq hidden    | compile  | 3.451   | 289,810 | 252.5    | 0.09x                    |
+| crematorium LIF | seq explicit  | eager    | 41.180  | 24,284  | 254.8    | 1.03x                    |
+| crematorium LIF | seq explicit  | compile  | 3.420   | 292,401 | 252.4    | 0.09x                    |
+| crematorium LIF | step hidden   | eager    | 45.254  | 22,098  | 126.8    | 1.13x                    |
+| crematorium LIF | step hidden   | compile  | 38.433  | 26,020  | 126.5    | 0.96x                    |
+| crematorium LIF | step explicit | eager    | 41.608  | 24,034  | 127.0    | 1.04x                    |
+| crematorium LIF | step explicit | compile  | 36.418  | 27,459  | 126.8    | 0.91x                    |
+| snntorch        | seq           | eager    | 101.685 | 9,834   | 377.5    | 2.55x                    |
+| snntorch        | seq           | compile  | 39.432  | 25,360  | 378.0    | 0.99x                    |
+| norse           | seq           | eager    | 100.005 | 9,999   | 378.3    | 2.51x                    |
+| norse           | seq           | compile  | 4.332   | 230,829 | 376.6    | 0.11x                    |
+| norse           | step          | eager    | 99.913  | 10,009  | 128.0    | 2.50x                    |
+| norse           | step          | compile  | 37.215  | 26,871  | 127.3    | 0.93x                    |
 
 Notes on reading this: the compiled scan fuses the unrolled T-step graph
 into one call, which is where the speedup over the per-step loop comes
@@ -248,7 +248,7 @@ comparable across all three (~127 MiB). Compiled timings vary run-to-run
 on laptop GPUs (typical single runs read ~3.3-3.8 ms here).
 
 > **Ratio convention**: `bench_all_vs.py` prints `framework_time /
-> crematorium_seq_eager_time` as the trailing `(N.Nx)` factor. Below 1.0
+crematorium_seq_eager_time` as the trailing `(N.Nx)` factor. Below 1.0
 > means faster than the first measured row (`seq hidden eager`).
 
 Multilayer network (`Linear(512,512) -> LIF x4 -> Linear(512,10) -> LIF`,
