@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Optional,
+    TypeAlias,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import torch
 import torch.nn as nn
@@ -9,12 +18,12 @@ import torch.nn as nn
 if TYPE_CHECKING:
     from . import CrModule
 
-Tensor = torch.Tensor
-StepOutput = tuple[Tensor, ...]
+Tensor: TypeAlias = torch.Tensor
+StepOutput: TypeAlias = tuple[Tensor, ...]
 
-InputTensor = Tensor | tuple[Tensor, ...] | list[Tensor] | dict[str, Tensor]
+InputTensor: TypeAlias = Tensor | tuple[Tensor, ...] | list[Tensor] | dict[str, Tensor]
 
-Constraint = Callable[[Tensor], Tensor]
+Constraint: TypeAlias = Callable[[Tensor], Tensor]
 
 
 # Constraints
@@ -149,11 +158,24 @@ class ConstantSpec:
 
     Unlike ``Param``, a constant is never registered as an ``nn.Parameter``;
     it is exposed as a plain attribute and constructor kwarg.
+
+    ``overridable`` controls per-instance constructor kwargs (subclass
+    redeclaration of the default is always allowed):
+      - ``True`` (default when unresolved): the constant is a constructor
+        kwarg and appears in ``__signature__``.
+      - ``False``: passing the kwarg raises ``TypeError`` and the name is
+        hidden from ``__signature__``. The value is fixed to the default
+        (a subclass may still redeclare a new default).
+      - ``None``: inherit the nearest ancestor's resolved value walking
+        base-first; ``True`` if no ancestor sets it. Reopening a locked
+        (``False``) ancestor with ``True`` raises ``TypeError`` at class
+        creation (monotonic lock).
     """
 
     default: Any = None
     validate: Optional[Callable[[Any], None]] = None
     dtype: Any = None
+    overridable: bool | None = None
 
 
 @overload
@@ -162,6 +184,7 @@ def Constant(
     *,
     validate: Optional[Callable[[Any], None]] = None,
     dtype: None = None,
+    overridable: bool | None = None,
 ) -> Any: ...
 
 
@@ -171,6 +194,7 @@ def Constant(
     *,
     validate: Optional[Callable[[Any], None]] = None,
     dtype: type[T],
+    overridable: bool | None = None,
 ) -> T: ...
 
 
@@ -180,6 +204,7 @@ def Constant(
     *,
     validate: Optional[Callable[[Any], None]] = None,
     dtype: Any = None,
+    overridable: bool | None = None,
 ) -> Any: ...
 
 
@@ -188,6 +213,7 @@ def Constant(
     *,
     validate: Optional[Callable[[Any], None]] = None,
     dtype: Any = None,
+    overridable: bool | None = None,
 ) -> Any:
     """
     Declarative non-learnable hyperparameter field.
@@ -201,11 +227,17 @@ def Constant(
 
     ``validate``, if given, must raise ``ValueError`` on an invalid value; the
     framework re-raises with the module and field name attached.
+
+    ``overridable=False`` pins the value to its default: passing it as a
+    constructor kwarg raises ``TypeError`` and it is hidden from
+    ``__signature__``. ``None`` (default) inherits the nearest ancestor's
+    value, defaulting to ``True``.
     """
     return ConstantSpec(
         default=default,
         validate=validate,
         dtype=dtype,
+        overridable=overridable,
     )
 
 

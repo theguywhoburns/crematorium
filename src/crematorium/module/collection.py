@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 import keyword
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 from .specs import (
@@ -54,6 +55,39 @@ def collect_params(
 
                     if name in scope_annotations:
                         constant_annotations[name] = scope_annotations[name]
+
+    # Resolve `overridable` per constant across the MRO (base-first):
+    # None inherits the nearest ancestor's resolved value, defaulting to
+    # True. The lock is monotonic: reopening a locked (False) ancestor
+    # with True raises at class creation. Subclass redeclaration of the
+    # default stays allowed regardless of the lock; the flag only gates
+    # per-instance constructor kwargs.
+    for name, winner in list(constants.items()):
+        resolved: bool | None = None
+
+        for klass in reversed(cls.__mro__):
+            for scope in (klass, klass.__dict__.get("Params", None)):
+                if scope is None:
+                    continue
+
+                local = vars(scope).get(name, None)
+
+                if not isinstance(local, ConstantSpec):
+                    continue
+
+                if local.overridable is not None:
+                    if resolved is False and local.overridable:
+                        raise TypeError(
+                            f"{cls.__name__} constant {name!r} reopens a "
+                            f"locked (overridable=False) ancestor; the lock "
+                            f"is monotonic"
+                        )
+
+                    resolved = local.overridable
+
+        constants[name] = replace(
+            winner, overridable=resolved if resolved is not None else True
+        )
 
     return params, annotations, constants, constant_annotations
 
@@ -305,6 +339,9 @@ def generate_signature(cls: type[CrModule]) -> None:
         )
 
     for name, spec in cls._cr_constant_specs.items():
+        if spec.overridable is False:
+            continue
+
         ann = (
             spec.dtype
             if spec.dtype is not None

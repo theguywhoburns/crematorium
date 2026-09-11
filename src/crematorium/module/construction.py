@@ -91,6 +91,12 @@ def build_params(
         constraint_fns.append(constraint if learnable else identity)
 
     for name, spec in module._cr_constant_specs.items():
+        if name in kwargs and spec.overridable is False:
+            raise TypeError(
+                f"{type(module).__name__} constant {name!r} is not "
+                f"overridable (overridable=False); it is fixed to its default"
+            )
+
         value = kwargs.pop(name, spec.default)
         value_orig = value
 

@@ -1618,6 +1618,81 @@ def test_signature_extra_init_params_only_for_snn():
 
 
 # ----------------------------------------------------------------------
+# N. Constant `overridable`
+# ----------------------------------------------------------------------
+
+
+class _OpenConst(CrModule):
+    k: int = CrModule.Constant(3, dtype=int)
+
+    class Specs:
+        o = CrModule.OutputSpec()
+
+    def _step(self, x):
+        return (x,)
+
+
+class _LockedConst(CrModule):
+    rank: int = CrModule.Constant(2, dtype=int, overridable=False)
+
+    class Specs:
+        o = CrModule.OutputSpec()
+
+    def _step(self, x):
+        return (x,)
+
+
+class _LockedChild(_LockedConst):
+    pass
+
+
+class _LockedRedeclare(_LockedConst):
+    rank: int = CrModule.Constant(4, dtype=int)
+
+
+def test_constant_overridable_defaults_true():
+    assert _OpenConst._cr_constant_specs["k"].overridable is True
+    assert _OpenConst(k=7).k == 7
+    assert "k" in inspect.signature(_OpenConst).parameters
+
+
+def test_constant_locked_rejects_kwarg():
+    m = _LockedConst()
+    assert m.rank == 2
+    assert _LockedConst._cr_constant_specs["rank"].overridable is False
+
+    with pytest.raises(TypeError, match="not overridable"):
+        _LockedConst(rank=4)
+
+
+def test_constant_locked_hidden_from_signature():
+    assert "rank" not in inspect.signature(_LockedConst).parameters
+
+
+def test_constant_lock_inherited_when_unset():
+    assert _LockedChild._cr_constant_specs["rank"].overridable is False
+    assert _LockedChild().rank == 2
+
+    with pytest.raises(TypeError, match="not overridable"):
+        _LockedChild(rank=4)
+
+
+def test_constant_locked_subclass_may_redeclare_default():
+    assert _LockedRedeclare._cr_constant_specs["rank"].overridable is False
+    assert _LockedRedeclare().rank == 4
+
+    with pytest.raises(TypeError, match="not overridable"):
+        _LockedRedeclare(rank=2)
+
+
+def test_constant_reopen_locked_raises_at_class_creation():
+    with pytest.raises(TypeError, match="reopens a locked"):
+
+        class _Reopen(_LockedConst):
+            rank: int = CrModule.Constant(2, dtype=int, overridable=True)
+
+
+# ----------------------------------------------------------------------
 # L. Behaviors ported from orig/ that still apply
 # ----------------------------------------------------------------------
 
