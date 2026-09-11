@@ -20,6 +20,7 @@ from .module import (
     set_validation,
 )
 from . import nn as nn
+from . import bnn as bnn
 
 __all__ = [
     "Constant",

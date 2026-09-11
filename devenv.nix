@@ -5,6 +5,7 @@
     pkgs.git
     pkgs.openssl
     pkgs.cudaPackages.cudatoolkit
+    pkgs.pyright
   ];
   languages.python = {
     enable = true;
