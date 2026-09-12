@@ -14,9 +14,7 @@ def _pack_last(bits: torch.Tensor) -> torch.Tensor:
     pad = (-b.shape[-1]) % 8
 
     if pad:
-        b = torch.cat(
-            [b, torch.zeros(*b.shape[:-1], pad, dtype=torch.uint8)], dim=-1
-        )
+        b = torch.cat([b, torch.zeros(*b.shape[:-1], pad, dtype=torch.uint8)], dim=-1)
 
     b = b.reshape(*b.shape[:-1], -1, 8)
     return ((b << torch.arange(8, dtype=torch.uint8)).sum(-1)).to(torch.uint8)
@@ -81,7 +79,11 @@ def test_conv2d_stride_padding_bitfaithful():
     C, OUT, S, K, ST, P = 16, 8, 9, 3, 2, 1
     xb, wb = _bits(B, C, S, S), _bits(OUT, C, K, K)
     m = XBConv2d(
-        in_features=C, out_features=OUT, kernel_size=K, stride=ST, padding=P,
+        in_features=C,
+        out_features=OUT,
+        kernel_size=K,
+        stride=ST,
+        padding=P,
         weight=wb,
     )
     y, _ = m.step_state(_pack_channels(xb), ())
@@ -109,8 +111,7 @@ def test_direct_rank_construction_matches_alias():
     C, OUT, S, K = 16, 8, 9, 3
     xb, wb = _bits(B, C, S, S), _bits(OUT, C, K, K)
     xp = _pack_channels(xb)
-    kw = dict(in_features=C, out_features=OUT, kernel_size=K, weight=wb,
-              validate=False)
+    kw = dict(in_features=C, out_features=OUT, kernel_size=K, weight=wb, validate=False)
     ref, _ = XBConv2d(**kw).step_state(xp, ())
     got, _ = XBCnn(rank=2, **kw).step_state(xp, ())
     assert torch.equal(got, ref)
@@ -143,8 +144,9 @@ def test_weight_forms():
         in_features=C, out_features=OUT, kernel_size=K, weight=wb
     ).step_state(xp, ())
 
-    m = XBConv2d(in_features=C, out_features=OUT, kernel_size=K,
-                 weight=_pack_channels(wb))
+    m = XBConv2d(
+        in_features=C, out_features=OUT, kernel_size=K, weight=_pack_channels(wb)
+    )
     assert m.weight.dtype == torch.uint8
     assert tuple(m.weight.shape) == (OUT, C // 8, K, K)
     assert "weight" in m.state_dict()
@@ -152,8 +154,12 @@ def test_weight_forms():
     assert torch.equal(got, ref)
 
     with pytest.raises(ValueError, match="rank"):
-        XBConv2d(in_features=C, out_features=OUT, kernel_size=K,
-                 weight=torch.zeros(OUT, C, K, K, 1, dtype=torch.uint8))
+        XBConv2d(
+            in_features=C,
+            out_features=OUT,
+            kernel_size=K,
+            weight=torch.zeros(OUT, C, K, K, 1, dtype=torch.uint8),
+        )
 
 
 def test_tally_shape_and_consistency():
@@ -177,8 +183,9 @@ def test_sequence_and_compiled():
     xp = torch.stack([_pack_channels(xb[t]) for t in range(T)])
 
     def make():
-        return XBConv2d(in_features=C, out_features=OUT, kernel_size=K,
-                        weight=wb, validate=False)
+        return XBConv2d(
+            in_features=C, out_features=OUT, kernel_size=K, weight=wb, validate=False
+        )
 
     m = make()
     seq = m.forward_sequence(xp)
@@ -202,10 +209,12 @@ def test_row_tiling_matches_untiled():
     xb, wb = _bits(B, C, S, S), _bits(OUT, C, K, K)
     xp = _pack_channels(xb)
 
-    ref, _ = XBConv2d(in_features=C, out_features=OUT, kernel_size=K,
-                      weight=wb, validate=False).step_state(xp, ())
-    m = XBConv2d(in_features=C, out_features=OUT, kernel_size=K,
-                 weight=wb, validate=False)
+    ref, _ = XBConv2d(
+        in_features=C, out_features=OUT, kernel_size=K, weight=wb, validate=False
+    ).step_state(xp, ())
+    m = XBConv2d(
+        in_features=C, out_features=OUT, kernel_size=K, weight=wb, validate=False
+    )
     m._TILE_ROWS = 64
     m._TILE_OUTPUTS = 5
     got, _ = m.step_state(xp, ())
