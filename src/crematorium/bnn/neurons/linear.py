@@ -3,6 +3,7 @@ from crematorium.bnn.module import XBModule
 
 __all__ = ["XBLinear"]
 
+
 class XBLinear(XBModule):
     """
     Packed-binary linear layer.

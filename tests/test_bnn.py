@@ -16,9 +16,7 @@ def _pack(bits: torch.Tensor) -> torch.Tensor:
     pad = (-b.shape[-1]) % 8
 
     if pad:
-        b = torch.cat(
-            [b, torch.zeros(*b.shape[:-1], pad, dtype=torch.uint8)], dim=-1
-        )
+        b = torch.cat([b, torch.zeros(*b.shape[:-1], pad, dtype=torch.uint8)], dim=-1)
 
     b = b.reshape(*b.shape[:-1], -1, 8)
     return ((b << torch.arange(8, dtype=torch.uint8)).sum(-1)).to(torch.uint8)
@@ -90,7 +88,7 @@ def test_tally_threshold_consistent(bits):
     xp = _pack(bx)
     thr = (IN + 1) // 2
     y, _ = m.step_state(xp, ())
-    assert torch.equal((_unpack(y, OUT) ), ((m.tally(xp) >= thr).to(torch.long)))
+    assert torch.equal((_unpack(y, OUT)), ((m.tally(xp) >= thr).to(torch.long)))
 
 
 def test_tally_validates(bits):
@@ -129,9 +127,7 @@ def test_pivotality_predicts_flips():
                 yf, _ = m.step_state(xf, ())
                 changed = bool(_unpack(yf, n_out)[bi, j] != y0b[bi, j])
                 xbit, wbit = int(bx[bi, i]), int(bw[j, i])
-                pivotal = (xbit == wbit and a == thr) or (
-                    xbit != wbit and a == thr - 1
-                )
+                pivotal = (xbit == wbit and a == thr) or (xbit != wbit and a == thr - 1)
                 assert changed == pivotal
 
 
@@ -242,8 +238,10 @@ def test_invalid_construction():
 
 
 def test_weight_ranks_declared():
-    assert (XBLinear._cr_weight_specs["weight"].min_rank == 2
-            and XBLinear._cr_weight_specs["weight"].max_rank == 2)
+    assert (
+        XBLinear._cr_weight_specs["weight"].min_rank == 2
+        and XBLinear._cr_weight_specs["weight"].max_rank == 2
+    )
     assert XBConv1d(in_features=16, out_features=8, kernel_size=3).rank == 1
     assert XBConv2d(in_features=16, out_features=8, kernel_size=3).rank == 2
     assert XBConv3d(in_features=16, out_features=8, kernel_size=3).rank == 3
@@ -420,9 +418,7 @@ def test_tiled_disagreement_small_is_single_shot():
     assert torch.equal(got, _single_shot(xm, w))
 
 
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="peak assertion needs CUDA"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="peak assertion needs CUDA")
 def test_tiled_disagreement_bounds_peak():
     torch.manual_seed(2)
     M, Wp, m = 20000, 72, 512

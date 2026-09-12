@@ -108,9 +108,9 @@ def _tiled_disagreement(
             o_hi = min(o_lo + tile_out, m)
             xor = xblk[:, None, :] ^ w[o_lo:o_hi][None, :, :]
             counts = _swar_byte_counts(xor, bits)
-            out[m_lo:m_hi, o_lo:o_hi] = counts.reshape(
-                *counts.shape[:-2], -1
-            ).sum(-1, dtype=torch.int32)
+            out[m_lo:m_hi, o_lo:o_hi] = counts.reshape(*counts.shape[:-2], -1).sum(
+                -1, dtype=torch.int32
+            )
 
     return out
 
@@ -157,9 +157,7 @@ def Spatial(default: Any = None, *, minimum: int = 0) -> Any:
     with its normalized (use-time) type.
     """
     if isinstance(minimum, bool) or not isinstance(minimum, int) or minimum < 0:
-        raise ValueError(
-            f"Spatial minimum must be a non-negative int, got {minimum!r}"
-        )
+        raise ValueError(f"Spatial minimum must be a non-negative int, got {minimum!r}")
 
     return SpatialSpec(
         default=default, validate=spatial_spec, dtype=None, minimum=minimum
@@ -217,9 +215,7 @@ def Weight(
     _check_rank_bound(max_rank, "max_rank")
 
     if min_rank is not None and max_rank is not None and min_rank > max_rank:
-        raise ValueError(
-            f"Weight min_rank ({min_rank}) exceeds max_rank ({max_rank})"
-        )
+        raise ValueError(f"Weight min_rank ({min_rank}) exceeds max_rank ({max_rank})")
 
     return WeightSpec(shape=tuple(shape), min_rank=min_rank, max_rank=max_rank)
 
@@ -273,9 +269,7 @@ def _pack_dim(t: Tensor, dim: int, bits: int, dtype: torch.dtype) -> Tensor:
     return p.permute(*inv)
 
 
-def _check_word_support(
-    dtype: torch.dtype, inputs: InputTensor, owner: str
-) -> None:
+def _check_word_support(dtype: torch.dtype, inputs: InputTensor, owner: str) -> None:
     """Probe bitwise-shift support for a pack dtype, cached per device."""
     if dtype == torch.uint8:
         return
@@ -575,8 +569,7 @@ class XBModule(CrModule):
         if tuple(weight.shape) == tuple(unpacked):
             if bool(((weight != 0) & (weight != 1)).any()):
                 raise ValueError(
-                    f"{type(self).__name__} unpacked weight must hold only "
-                    f"0/1 values"
+                    f"{type(self).__name__} unpacked weight must hold only 0/1 values"
                 )
 
             return self._cr_pack_channels(weight)
@@ -612,18 +605,14 @@ class XBModule(CrModule):
 
     def _cr_pack_bits(self, bits_in: Tensor) -> Tensor:
         """``(..., F)`` {0,1}/bool -> ``(..., ceil(F / bits))`` packed LSB-first."""
-        return _pack_bits_last(
-            bits_in, self._cr_word_bits(), self.pack_dtype
-        )
+        return _pack_bits_last(bits_in, self._cr_word_bits(), self.pack_dtype)
 
     def _cr_pack_channels(self, bits_in: Tensor) -> Tensor:
         """
         ``(B, C, *S)`` {0,1}/bool -> ``(B, Cw, *S)`` packed LSB-first
         along the channel dim.
         """
-        return _pack_dim(
-            bits_in, 1, self._cr_word_bits(), self.pack_dtype
-        )
+        return _pack_dim(bits_in, 1, self._cr_word_bits(), self.pack_dtype)
 
     def _cr_xnor_agree(self, x_packed: Tensor, w_packed: Tensor) -> Tensor:
         """

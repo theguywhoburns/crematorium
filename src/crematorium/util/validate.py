@@ -21,7 +21,12 @@ def multiple_of(n: int) -> Callable[[Any], None]:
     """Validate that ``value`` is a positive multiple of ``n`` (not bool)."""
 
     def validate(value: Any) -> None:
-        if isinstance(value, bool) or not isinstance(value, int) or value <= 0 or value % n:
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int)
+            or value <= 0
+            or value % n
+        ):
             raise ValueError(f"must be a positive multiple of {n}, got {value!r}")
 
     return validate

@@ -49,9 +49,7 @@ class XBCnn(XBModule):
     rank: int = XBModule.Constant(validate=spatial_rank)
 
     class Specs(XBModule.Specs):
-        weight = XBModule.Weight(
-            shape=_CONV_WEIGHT_SHAPE, min_rank=3, max_rank=5
-        )
+        weight = XBModule.Weight(shape=_CONV_WEIGHT_SHAPE, min_rank=3, max_rank=5)
 
     def _extract_patches(self, x: Tensor) -> tuple[Tensor, tuple[int, ...]]:
         """
@@ -125,22 +123,16 @@ class XBCnn(XBModule):
 class XBConv1d(XBCnn):
     """Packed-binary 1D convolution over ``(B, C, L)``."""
 
-    rank: int = XBCnn.Constant(
-        default=1, validate=spatial_rank, overridable=False
-    )
+    rank: int = XBCnn.Constant(default=1, validate=spatial_rank, overridable=False)
 
 
 class XBConv2d(XBCnn):
     """Packed-binary 2D convolution over ``(B, C, H, W)``."""
 
-    rank: int = XBCnn.Constant(
-        default=2, validate=spatial_rank, overridable=False
-    )
+    rank: int = XBCnn.Constant(default=2, validate=spatial_rank, overridable=False)
 
 
 class XBConv3d(XBCnn):
     """Packed-binary 3D convolution over ``(B, C, D, H, W)``."""
 
-    rank: int = XBCnn.Constant(
-        default=3, validate=spatial_rank, overridable=False
-    )
+    rank: int = XBCnn.Constant(default=3, validate=spatial_rank, overridable=False)
